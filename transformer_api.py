@@ -48,13 +48,22 @@ def predict():
     with torch.no_grad():
         image_features = model.get_image_features(**inputs)
 
-    # 将图像特征转换为描述
-    input_ids = image_features.unsqueeze(0).long()  # 调整维度
-    generated_ids = text_model.generate(input_ids)
+    # 假设我们可以用图像特征生成描述性文本
+    # 将图像特征转化为适合文本生成的输入
+    # 使用一个简单的文本提示加图像特征（例如，获取最大值并拼接）
+    image_embedding = image_features.cpu().numpy().flatten()
+    image_description = "Image feature vector: " + str(image_embedding)  # 将图像特征转为字符串
 
+    # 更新提示文本
+    prompt = f"Describe the content of this image based on the following features: {image_description}"
+    input_ids = tokenizer(prompt, return_tensors="pt").input_ids
+
+    # 使用 T5 生成描述
+    generated_ids = text_model.generate(input_ids)
     description = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
 
     return {"description": description}
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8082)
