@@ -3,12 +3,10 @@
 # @Time: 2024/10/7
 
 from config import model_file
-import requests
-from PIL import Image
 from config import api_log_file
 from transformers import BlipProcessor, BlipForConditionalGeneration
 import logging
-from deep_translator import GoogleTranslator
+from youdao_translator import youda_trans
 
 # 配置logging模块
 logging.basicConfig(
@@ -43,9 +41,11 @@ def describe_image(raw_image):
     out = model.generate(**inputs)
     unconditional_detail = processor.decode(out[0], skip_special_tokens=True)
     # 使用googletrans库进行翻译
-    translator2 = GoogleTranslator(source='auto', target='zh-CN')
+    # translator2 = GoogleTranslator(source='auto', target='zh-CN')
     # unconditional_detail = translator2.translate(unconditional_detail, dest='zh-cn')
-    unconditional_detail = translator2.translate(unconditional_detail)
+    # unconditional_detail = translator2.translate(unconditional_detail)
+    logging.info(unconditional_detail)
+    unconditional_detail = youda_trans(unconditional_detail)
     logging.info(unconditional_detail)
     return unconditional_detail
 
