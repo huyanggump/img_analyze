@@ -1,16 +1,180 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Description</title>
+    <title>图片智能分析-by WalkerZ</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+        /* 保证页脚在页面底部 */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+        }
+        footer {
+            margin-top: auto; /* 自动推到页面底端 */
+            text-align: left;
+            padding: 10px;
+        }
+        /* 控制输入框和按钮的显示 */
+        .upload-controls {
+            display: flex;
+            flex-direction: column; /* 使元素竖直排列 */
+            margin-top: 10px; /* 添加间距 */
+        }
+        .upload-controls input[type="file"] {
+            width: 15%;
+            margin-top: 10px; /* 控制文件输入框的上下间距 */
+            margin-left: 10px; /* 控制文件输入框的上下间距 */
+            margin-right: 2px;
+        }
+        .upload-controls input[type="submit"] {
+            width: 85px; /* 设置宽度为 100% */
+            padding: 5px; /* 添加内边距 */
+            font-size: 13px; /* 设置字体大小 */
+            cursor: pointer; /* 鼠标指针样式 */
+            margin-top: 40px;
+            margin-left: 10px
+        }
+        .upload-controls button {
+            width: 7%; /* 设置宽度为 100% */
+            padding: 5px; /* 添加内边距 */
+            font-size: 13px; /* 设置字体大小 */
+            cursor: pointer; /* 鼠标指针样式 */
+            margin-top: 40px;
+            margin-left: 10px
+        }
+        .file-input-wrapper {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        #clearButton {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 17px;
+            color: #333;
+            margin-top: 10px;
+            /*margin-left: 30px;*/
+        }
+        /* 设置删除图标的样式 */
+        #clearButton:hover {
+            color: #e74c3c;
+        }
+
+        /* 图片预览样式 */
+        #imagePreview {
+            margin-top: 20px;
+            max-width: 40%;
+            max-height: 300px;
+            display: none; /* 默认隐藏 */
+            margin-left: 10px
+        }
+        .h5title {
+          margin-left: 10px
+        }
+    </style>
 </head>
 <body>
-    <h1>Upload an Image to Get a Description</h1>
-    <form action="/predict" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" accept="image/*" required>
-        <button type="submit">Upload</button>
+    <h2 class="h5title">图片智能分析</h2>
+<!--    <small style="margin-left: 10px">可识别十种动物或交通工具：<b>飞机、汽车、鸟、猫、鹿、狗、青蛙、马、船、卡车</b>。</small>-->
+    <small style="margin-left: 10px; margin-top: 5px" >推荐使用Bing搜索图片-> <a target="_blank" href="https://cn.bing.com/images/search?q=%E7%8C%AB&qs=n&form=QBIRMH&sp=-1&lq=0&pq=%E7%8C%AB%20%2B%20%E7%8B%97&sc=10-5&cvid=91567FCED5CD413B90BD6A3ADA926597&ghsh=0&ghacc=0&first=1">例如，搜索“猫”</a></small>
+    <form id="uploadForm">
+      <div class="upload-controls">
+          <div class="file-input-wrapper">
+                <input type="file" id="fileInput" name="file" accept="image/*">
+                <!-- 清除按钮：使用垃圾桶图标 -->
+                <button type="button" id="clearButton" aria-label="Clear image">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+
+        <!-- 图片预览放在两个 input 元素之间 -->
+        <img id="imagePreview" src="#" alt="Image Preview">
+          <input type="submit" value="开始分析">
+      </div>
     </form>
+
+    <p id="statusMessage" style="margin-left: 10px"></p>
+
+     <footer>
+        <p><small>by WalkerZ</small></p>
+        <p><small>source code: <a target="_blank" href="https://github.com/huyanggump/animal_reckon">https://github.com/huyanggump/animal_reckon</a></small></p>
+    </footer>
+
+    <script>
+        // 监听文件选择
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            var file = event.target.files[0]; // 获取用户选择的文件
+
+            if (file) {
+                var reader = new FileReader(); // 创建 FileReader 对象
+
+                // 文件读取完成后的回调函数
+                reader.onload = function(e) {
+                    var imagePreview = document.getElementById('imagePreview');
+                    imagePreview.src = e.target.result; // 设置 img 元素的 src 为图片数据
+                    imagePreview.style.display = 'block'; // 显示图片预览
+                };
+
+                // 读取文件为 Data URL
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 清除图片的函数
+        document.getElementById('clearButton').addEventListener('click', function() {
+            var fileInput = document.getElementById('fileInput');
+            var imagePreview = document.getElementById('imagePreview');
+            var statusMessage = document.getElementById('statusMessage');
+
+            // 清除文件输入框的值
+            fileInput.value = '';
+
+            // 隐藏图片预览
+            imagePreview.src = '#';
+            imagePreview.style.display = 'none';
+
+            // 清空状态消息
+            statusMessage.innerText = '';
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            var fileInput = document.getElementById('fileInput');
+            var file = fileInput.files[0];
+            var formData = new FormData();
+            formData.append('file', file);
+
+            // Ajax 请求上传文件
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/predict', true);
+
+            // 设置回调函数处理响应
+            xhr.onload = function () {
+                var statusMessage = document.getElementById('statusMessage');
+                if (xhr.status === 200) {
+                    var response = JSON.parse(xhr.responseText);
+                    if (response.success) {
+                        statusMessage.innerText = response.message;
+                        statusMessage.style.color = 'green';
+                    } else {
+                        statusMessage.innerText = 'Upload failed: ' + response.message;
+                        statusMessage.style.color = 'red';
+                    }
+                } else {
+                    statusMessage.innerText = 'Error uploading file';
+                    statusMessage.style.color = 'red';
+                }
+            };
+
+            // 发送文件
+            xhr.send(formData);
+        });
+    </script>
 </body>
 </html>

@@ -1,13 +1,14 @@
 # coding: utf-8
 # @Author: WalkerZ
-# @Time: 2024/10/6
+# @Time: 2024/10/7
 
-
-from transformers import CLIPProcessor, CLIPModel, AutoTokenizer, AutoModelForSeq2SeqLM
-from PIL import Image
+from config import model_file
 import requests
+from PIL import Image
 from config import api_log_file
+from transformers import BlipProcessor, BlipForConditionalGeneration
 import logging
+from deep_translator import GoogleTranslator
 
 # 配置logging模块
 logging.basicConfig(
@@ -17,49 +18,34 @@ logging.basicConfig(
     level=logging.INFO        # 日志级别
 )
 
+processor = BlipProcessor.from_pretrained(model_file)
+model = BlipForConditionalGeneration.from_pretrained(model_file)
 
-processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch16")
-model = CLIPModel.from_pretrained("openai/clip-vit-base-patch16")
+# img_url = 'https://www.greenpeace.org/static/planet4-taiwan-stateless/2021/04/17b12b72-shutterstock_77217466-scaled-e1622618684654.jpg'
+# raw_image = Image.open(requests.get(img_url, stream=True).raw).convert('RGB')
 
-tokenizer = AutoTokenizer.from_pretrained("t5-small")
-text_model = AutoModelForSeq2SeqLM.from_pretrained("t5-small")
+def describe_image(raw_image):
+    # conditional image captioning
+    # text = "a photography of"
+    # inputs = processor(raw_image, text, return_tensors="pt")
 
-# IMAGE_URL = "/Users/walkerz/AI/single_test/cat1111.jpeg"
+    # out = model.generate(**inputs)
+    # conditional_detail = processor.decode(out[0], skip_special_tokens=True)
+    # # 使用googletrans库进行翻译
+    # translator = GoogleTranslator(source='auto', target='zh-CN')
+    # # conditional_detail = translator.translate(conditional_detail, dest='zh-cn')
+    # conditional_detail = translator.translate(conditional_detail)
+    # logging.info(conditional_detail)
 
-IMAGE_URL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpHYuBRGaCfY4fKwgc3RIRETcy7Y9Bq0XEpA&s"
+    # unconditional image captioning
+    inputs = processor(raw_image, return_tensors="pt")
 
-# 加载图像
-image = Image.open(requests.get(IMAGE_URL, stream=True).raw)
-
-# 处理图像
-inputs = processor(images=image, return_tensors="pt")
-
-# # 生成描述
-# out = model.generate(**inputs)
-# description = processor.decode(out[0], skip_special_tokens=True)
-# 获取图像嵌入
-outputs = model.get_image_features(**inputs)
-description_tensor = outputs.cpu().detach()
-# description = outputs.cpu().detach().numpy()
-
-# 生成描述的输入提示
-prompt = "Describe this image:"
-input_ids = tokenizer(prompt, return_tensors="pt").input_ids
-
-# input_ids = description_tensor.unsqueeze(0).long()
-generated_ids = text_model.generate(input_ids)
-description = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
-
-
-print(description)
-
-
-
-
-
-
-
-
-
-
+    out = model.generate(**inputs)
+    unconditional_detail = processor.decode(out[0], skip_special_tokens=True)
+    # 使用googletrans库进行翻译
+    translator2 = GoogleTranslator(source='auto', target='zh-CN')
+    # unconditional_detail = translator2.translate(unconditional_detail, dest='zh-cn')
+    unconditional_detail = translator2.translate(unconditional_detail)
+    logging.info(unconditional_detail)
+    return unconditional_detail
 
