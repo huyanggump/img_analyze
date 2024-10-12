@@ -17,7 +17,8 @@ logging.basicConfig(
 )
 
 processor = BlipProcessor.from_pretrained(model_file)
-model = BlipForConditionalGeneration.from_pretrained(model_file)
+# model = BlipForConditionalGeneration.from_pretrained(model_file)
+model = BlipForConditionalGeneration.from_pretrained(model_file).to("cuda")
 
 # img_url = 'https://www.greenpeace.org/static/planet4-taiwan-stateless/2021/04/17b12b72-shutterstock_77217466-scaled-e1622618684654.jpg'
 # raw_image = Image.open(requests.get(img_url, stream=True).raw).convert('RGB')
@@ -36,7 +37,8 @@ def describe_image(raw_image):
     # logging.info(conditional_detail)
 
     # unconditional image captioning
-    inputs = processor(raw_image, return_tensors="pt")
+    # inputs = processor(raw_image, return_tensors="pt")
+    inputs = processor(raw_image, return_tensors="pt").to("cuda")
 
     out = model.generate(**inputs)
     unconditional_detail = processor.decode(out[0], skip_special_tokens=True)
